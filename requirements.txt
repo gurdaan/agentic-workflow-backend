@@ -1,0 +1,23 @@
+# Azure DevOps AI Agent Dependencies
+
+# Core framework
+semantic-kernel
+python-dotenv
+fastapi
+uvicorn[standard]
+
+# Azure services
+azure-devops
+azure-identity
+azure-ai-agents
+azure-storage-blob
+msrest
+aiohttp
+
+# AI and MCP
+openai
+mcp
+mcp-azure-devops
+
+# CORS support
+fastapi-cors
