@@ -1,0 +1,58 @@
+# Git
+.git
+.gitignore
+README.md
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+.pytest_cache
+.coverage
+htmlcov/
+
+# Virtual environment
+.venv
+venv/
+ENV/
+
+# Environment files
+.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+agent_service.log
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Azure
+.azure/
+
+# Deployment
+deployment.zip
+
+# GitHub
+.github/
+setup-secrets.sh
