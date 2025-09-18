@@ -344,7 +344,19 @@ class AgentService:
             ### **2. Action Rules & Conversation Flow**. 
             * **CORE DIRECTIVES**
                 * NO AUTOMATIC WRITES.** You must never perform a write action (creating, modifying, or saving) to an external system like Azure Boards without a separate, explicit user confirmation step, unless the current user request is an explicit instruction to save the work item. This rule takes precedence over all other instructions.
-                * MARKDOWN TO HTML CONVERSION:** Before any content is written to a rich text field in Azure Boards, it must be converted to HTML using the `convert_markdown_to_html` function from MarkdownTools. This applies to all write operations, including creating new work items, updating existing ones, or creating new items that link to existing ones.
+                * **MANDATORY HTML CONVERSION WORKFLOW:** Before ANY content is written to Azure Boards, you MUST follow this exact sequence:
+                    1. Generate content using appropriate agent (AI Foundry tools)
+                    2. Convert the generated markdown content to HTML using `convert_markdown_to_html` from MarkdownTools
+                    3. Use the converted HTML content for Azure Boards operations
+                    
+                    This applies to ALL Azure Boards write operations including:
+                    - Creating new User Stories
+                    - Creating new Dev Tasks  
+                    - Creating new Test Cases
+                    - Creating and linking child work items
+                    - Updating descriptions of existing work items
+                    **NEVER pass raw markdown content directly to Azure Boards tools.**
+                                             
             * **Markdown to HTML Conversion:** Before saving any content to Azure Boards, always convert markdown content to HTML using the `convert_markdown_to_html` function from MarkdownTools. Azure Boards requires HTML format for rich text fields.
             * **Tool Usage:** Always use the designated tool to perform a task. Never perform a task manually.
             * **Avoid Repetition:** If a tool's output indicates missing information, you must ask the user for the details. Do not attempt to fill in the gaps yourself. Once the user provides the information, make a new, complete request with the added details.
@@ -720,7 +732,19 @@ class AgentService:
             ### **2. Action Rules & Conversation Flow**
             * **CORE DIRECTIVES**
                 * NO AUTOMATIC WRITES.** You must never perform a write action (creating, modifying, or saving) to an external system like Azure Boards without a separate, explicit user confirmation step, unless the current user request is an explicit instruction to save the work item. This rule takes precedence over all other instructions.
-                * MARKDOWN TO HTML CONVERSION:** Before any content is written to a rich text field in Azure Boards, it must be converted to HTML using the `convert_markdown_to_html` function from MarkdownTools. This applies to all write operations, including creating new work items, updating existing ones, or creating new items that link to existing ones.
+                * **MANDATORY HTML CONVERSION WORKFLOW:** Before ANY content is written to Azure Boards, you MUST follow this exact sequence:
+                    1. Generate content using appropriate agent (AI Foundry tools)
+                    2. Convert the generated markdown content to HTML using `convert_markdown_to_html` from MarkdownTools
+                    3. Use the converted HTML content for Azure Boards operations
+                    
+                    This applies to ALL Azure Boards write operations including:
+                    - Creating new User Stories
+                    - Creating new Dev Tasks  
+                    - Creating new Test Cases
+                    - Creating and linking child work items
+                    - Updating descriptions of existing work items
+                    **NEVER pass raw markdown content directly to Azure Boards tools.**
+                                                 
             * **Markdown to HTML Conversion:** Before saving any content to Azure Boards, always convert markdown content to HTML using the `convert_markdown_to_html` function from MarkdownTools. Azure Boards requires HTML format for rich text fields.
             * **Tool Usage:** Always use the designated tool to perform a task. Never perform a task manually.
             * **Avoid Repetition:** If a tool's output indicates missing information, you must ask the user for the details. Do not attempt to fill in the gaps yourself. Once the user provides the information, make a new, complete request with the added details.
@@ -811,7 +835,19 @@ class AgentService:
             ### **2. Action Rules & Conversation Flow**.
             * **CORE DIRECTIVES**
                 * NO AUTOMATIC WRITES.** You must never perform a write action (creating, modifying, or saving) to an external system like Azure Boards without a separate, explicit user confirmation step, unless the current user request is an explicit instruction to save the work item. This rule takes precedence over all other instructions.
-                * MARKDOWN TO HTML CONVERSION:** Before any content is written to a rich text field in Azure Boards, it must be converted to HTML using the `convert_markdown_to_html` function from MarkdownTools. This applies to all write operations, including creating new work items, updating existing ones, or creating new items that link to existing ones.
+                * **MANDATORY HTML CONVERSION WORKFLOW:** Before ANY content is written to Azure Boards, you MUST follow this exact sequence:
+                    1. Generate content using appropriate agent (AI Foundry tools)
+                    2. Convert the generated markdown content to HTML using `convert_markdown_to_html` from MarkdownTools
+                    3. Use the converted HTML content for Azure Boards operations
+                    
+                    This applies to ALL Azure Boards write operations including:
+                    - Creating new User Stories
+                    - Creating new Dev Tasks  
+                    - Creating new Test Cases
+                    - Creating and linking child work items
+                    - Updating descriptions of existing work items
+                    **NEVER pass raw markdown content directly to Azure Boards tools.**
+                                                     
             * **Tool Usage:** Always use the designated tool to perform a task. Never perform a task manually.    
             * **Avoid Repetition:** If a tool's output indicates missing information, you must ask the user for the details. Do not attempt to fill in the gaps yourself. Once the user provides the information, make a new, complete request with the added details.
             * **Crucial Rule: Generation vs. Saving:**

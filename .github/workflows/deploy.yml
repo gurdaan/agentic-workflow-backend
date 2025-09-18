@@ -1,0 +1,57 @@
+name: Deploy to Azure Web App
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  AZURE_WEBAPP_NAME: azure-board-agents-backend
+  PYTHON_VERSION: '3.12'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Login to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        package: '.'
+
+    - name: Configure App Settings
+      run: |
+        az webapp config appsettings set \
+          --name ${{ env.AZURE_WEBAPP_NAME }} \
+          --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+          --settings \
+            AZURE_OPENAI_ENDPOINT="${{ secrets.AZURE_OPENAI_ENDPOINT }}" \
+            AZURE_OPENAI_API_KEY="${{ secrets.AZURE_OPENAI_API_KEY }}" \
+            AZURE_OPENAI_DEPLOYMENT="${{ secrets.AZURE_OPENAI_DEPLOYMENT }}" \
+            AI_FOUNDRY_ENDPOINT="${{ secrets.AI_FOUNDRY_ENDPOINT }}" \
+            AI_FOUNDRY_ASSISTANT_ID="${{ secrets.AI_FOUNDRY_ASSISTANT_ID }}" \
+            AI_FOUNDRY_TESTCASES_ASSISTANT_ID="${{ secrets.AI_FOUNDRY_TESTCASES_ASSISTANT_ID }}" \
+            AI_FOUNDRY_DEV_TASKS_ASSISTANT_ID="${{ secrets.AI_FOUNDRY_DEV_TASKS_ASSISTANT_ID }}" \
+            AZURE_DEVOPS_PAT="${{ secrets.AZURE_DEVOPS_PAT }}" \
+            AZURE_DEVOPS_ORGANIZATION_URL="${{ secrets.AZURE_DEVOPS_ORGANIZATION_URL }}" \
+            AZURE_DEVOPS_PROJECT="${{ secrets.AZURE_DEVOPS_PROJECT }}" \
+            AZURE_STORAGE_CONNECTION_STRING="${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" \
+            AZURE_STORAGE_CONTAINER_NAME="${{ secrets.AZURE_STORAGE_CONTAINER_NAME }}"
