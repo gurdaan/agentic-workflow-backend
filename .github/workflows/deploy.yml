@@ -19,6 +19,9 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
     - name: Login to Azure
       uses: azure/login@v1
       with:
@@ -30,30 +33,29 @@ jobs:
 
     - name: Build and push Docker image
       run: |
-        # Build the Docker image
-        docker build -t ${{ env.AZURE_CONTAINER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} .
-        docker build -t ${{ env.AZURE_CONTAINER_REGISTRY }}/${{ env.IMAGE_NAME }}:latest .
-        
-        # Push both tags
-        docker push ${{ env.AZURE_CONTAINER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-        docker push ${{ env.AZURE_CONTAINER_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+        # Build the Docker image for linux/amd64 platform
+        docker buildx create --use
+        docker buildx build \
+          --platform linux/amd64 \
+          --tag ${{ env.AZURE_CONTAINER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+          --tag ${{ env.AZURE_CONTAINER_REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
+          --push \
+          .
 
     - name: Deploy to Azure Container Apps
       run: |
+        # Check if Container App Environment exists, if not create it
+        if ! az containerapp env show --name aca-env-azure-board-agents --resource-group ${{ env.RESOURCE_GROUP }} &> /dev/null; then
+          echo "Creating Container App Environment..."
+          az containerapp env create \
+            --name aca-env-azure-board-agents \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --location eastus
+        fi
+
         # Check if Container App exists, if not create it
         if ! az containerapp show --name ${{ env.CONTAINER_APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} &> /dev/null; then
           echo "Creating new Container App..."
-          
-          # Create Container App Environment if it doesn't exist
-          if ! az containerapp env show --name aca-env-azure-board-agents --resource-group ${{ env.RESOURCE_GROUP }} &> /dev/null; then
-            echo "Creating Container App Environment..."
-            az containerapp env create \
-              --name aca-env-azure-board-agents \
-              --resource-group ${{ env.RESOURCE_GROUP }} \
-              --location eastus
-          fi
-          
-          # Create the Container App
           az containerapp create \
             --name ${{ env.CONTAINER_APP_NAME }} \
             --resource-group ${{ env.RESOURCE_GROUP }} \
@@ -91,7 +93,8 @@ jobs:
             AZURE_DEVOPS_ORGANIZATION_URL="${{ secrets.AZURE_DEVOPS_ORGANIZATION_URL }}" \
             AZURE_DEVOPS_PROJECT="${{ secrets.AZURE_DEVOPS_PROJECT }}" \
             AZURE_STORAGE_CONNECTION_STRING="${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" \
-            AZURE_STORAGE_CONTAINER_NAME="${{ secrets.AZURE_STORAGE_CONTAINER_NAME }}"
+            AZURE_STORAGE_CONTAINER_NAME="${{ secrets.AZURE_STORAGE_CONTAINER_NAME }}" \
+            PORT="8000"
 
     - name: Get Container App URL
       run: |
@@ -100,7 +103,5 @@ jobs:
           --resource-group ${{ env.RESOURCE_GROUP }} \
           --query properties.configuration.ingress.fqdn \
           --output tsv)
-        
-        echo "🚀 Application deployed successfully!"
-        echo "📱 Container App URL: https://$APP_URL"
+        echo "🚀 Container App URL: https://$APP_URL"
         echo "🐳 Docker Image: ${{ env.AZURE_CONTAINER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
