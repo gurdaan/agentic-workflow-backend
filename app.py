@@ -1,14 +1,19 @@
 """
-Simple FastAPI wrapper for Azure Boards AI Agent
+Azure Boards AI Agent API
+
+A comprehensive REST API for managing Azure DevOps work items through AI-powered agents.
+This service provides intelligent automation for creating user stories, test cases, and development tasks
+using Azure OpenAI and Azure AI Foundry services, with persistent chat history storage.
 """
 
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException, BackgroundTasks, status
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, ConfigDict
 from agents import AgentService
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
+from datetime import datetime
 
 # Configure logging for the API
 logging.basicConfig(

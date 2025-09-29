@@ -42,6 +42,10 @@ COPY --from=builder /opt/venv /opt/venv
 # Create non-root user for security
 RUN groupadd -r appuser && useradd -r -g appuser appuser
 
+# Create home directory for appuser and Azure DevOps cache directory
+RUN mkdir -p /home/appuser/.azure-devops && \
+    chown -R appuser:appuser /home/appuser
+
 # Set working directory
 WORKDIR /app
 

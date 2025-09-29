@@ -1,0 +1,969 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Azure Boards AI Agent API",
+    "description": "A comprehensive REST API for managing Azure DevOps work items through AI-powered agents.\n\nThis service provides intelligent automation for creating user stories, test cases, and development tasks using Azure OpenAI and Azure AI Foundry services, with persistent chat history storage in Azure Blob Storage.\n\n## Features\n\n- **AI-Powered Content Generation**: Generate user stories, test cases, and development tasks using specialized AI agents\n- **Azure DevOps Integration**: Direct integration with Azure Boards for work item management\n- **Persistent Chat History**: Save and manage conversation sessions in Azure Blob Storage\n- **Session Management**: Create, switch, and manage multiple chat sessions\n- **Real-time Processing**: Process natural language queries and route to appropriate AI agents\n\n## Architecture\n\nThe API orchestrates multiple specialized AI agents:\n- **User Story Agent**: Generates formal Agile user stories with acceptance criteria\n- **Test Cases Agent**: Creates comprehensive test scenarios and test cases\n- **Development Tasks Agent**: Breaks down user stories into actionable development tasks\n- **Azure DevOps Agent**: Manages work items directly in Azure Boards\n\n## Authentication\n\nThis API uses Azure Active Directory authentication and requires proper environment configuration for:\n- Azure OpenAI services\n- Azure AI Foundry endpoints\n- Azure DevOps Personal Access Tokens\n- Azure Blob Storage connection strings",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Azure Boards AI Agent Support",
+      "url": "https://github.com/gurdaan/agentic-workflow-backend"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://jonas.victorioussmoke-3dca34aa.westus2.azurecontainerapps.io",
+      "description": "Production server (Azure Container Apps)"
+    },
+    {
+      "url": "http://localhost:8000",
+      "description": "Local development server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Chat",
+      "description": "AI-powered chat interface for generating Azure DevOps work items"
+    },
+    {
+      "name": "Sessions",
+      "description": "Chat session management and persistence"
+    },
+    {
+      "name": "Health",
+      "description": "Service health and status monitoring"
+    }
+  ],
+  "paths": {
+    "/api/chat": {
+      "post": {
+        "tags": ["Chat"],
+        "summary": "Process AI Chat Query",
+        "description": "Process a natural language query through the AI agent system. The system will intelligently route your request to the appropriate specialized agent based on intent detection.\n\n**Supported Intents:**\n- Generate user stories with acceptance criteria\n- Create test cases and scenarios\n- Generate development tasks\n- Query existing work items in Azure Boards\n- Create and save work items to Azure DevOps\n\nThe response includes both the generated content and metadata flags indicating the type of content generated.",
+        "operationId": "processChat",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              },
+              "examples": {
+                "user_story_request": {
+                  "summary": "Generate User Story",
+                  "description": "Request to generate a user story for user authentication",
+                  "value": {
+                    "query": "Create a user story for implementing two-factor authentication in our web application"
+                  }
+                },
+                "test_cases_request": {
+                  "summary": "Generate Test Cases",
+                  "description": "Request to generate test cases for a feature",
+                  "value": {
+                    "query": "Generate test cases for the user login functionality with password validation"
+                  }
+                },
+                "dev_tasks_request": {
+                  "summary": "Generate Development Tasks",
+                  "description": "Request to break down a feature into development tasks",
+                  "value": {
+                    "query": "Break down the shopping cart feature into development tasks for our e-commerce platform"
+                  }
+                },
+                "azure_boards_query": {
+                  "summary": "Query Azure Boards",
+                  "description": "Query existing work items in Azure DevOps",
+                  "value": {
+                    "query": "Show me all open user stories assigned to the current iteration"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Chat query processed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatResponse"
+                },
+                "examples": {
+                  "user_story_response": {
+                    "summary": "User Story Generated",
+                    "description": "Example response when a user story is generated",
+                    "value": {
+                      "content": "# User Story\n\n**Title:** Two-Factor Authentication Implementation\n\n**User Story:**\nAs a security-conscious user, I want to enable two-factor authentication on my account so that I can protect my personal information from unauthorized access.\n\n**Acceptance Criteria:**\n- Given I am a registered user\n- When I navigate to account security settings\n- Then I should see an option to enable 2FA\n- And I should be able to configure it using an authenticator app\n- And I should receive a backup code for recovery\n\n**Priority:** High\n**Story Points:** 8\n\nWould you like me to save this user story to Azure Boards?",
+                      "metadata": {
+                        "userstory": true,
+                        "testcase": false,
+                        "devtask": false,
+                        "needs_clarification": false,
+                        "needs_save_confirmation": true,
+                        "content_complete": true,
+                        "sections_count": 5,
+                        "word_count": 98,
+                        "azure_boards_ready": false
+                      }
+                    }
+                  },
+                  "clarification_response": {
+                    "summary": "Clarification Needed",
+                    "description": "Example response when more information is needed",
+                    "value": {
+                      "content": "I'd be happy to help you create test cases! To generate the most relevant test cases, could you please provide more details about:\n\n1. What type of application is this for? (web, mobile, API)\n2. What specific functionality needs testing?\n3. Are there any particular edge cases or security requirements?\n4. What testing framework or approach do you prefer?\n\nThis will help me create comprehensive and tailored test cases for your needs.",
+                      "metadata": {
+                        "userstory": false,
+                        "testcase": false,
+                        "devtask": false,
+                        "needs_clarification": true,
+                        "needs_save_confirmation": false,
+                        "content_complete": false,
+                        "sections_count": 1,
+                        "word_count": 67,
+                        "azure_boards_ready": false
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error during chat processing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "detail": "Agent service encountered an error during processing"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Agent service not initialized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "detail": "Agent service not initialized"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sessions/new": {
+      "post": {
+        "tags": ["Sessions"],
+        "summary": "Create New Chat Session",
+        "description": "Create a new chat session for organizing conversations. Each session maintains its own conversation history and can be saved to Azure Blob Storage for persistence.\n\nIf no session name is provided, a timestamp-based name will be automatically generated.",
+        "operationId": "createNewSession",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewSessionRequest"
+              },
+              "examples": {
+                "named_session": {
+                  "summary": "Create Named Session",
+                  "description": "Create a session with a specific name",
+                  "value": {
+                    "session_name": "E-commerce Features Sprint 1"
+                  }
+                },
+                "auto_named_session": {
+                  "summary": "Auto-Named Session",
+                  "description": "Create a session with automatic timestamp naming",
+                  "value": {}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "New session created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                },
+                "example": {
+                  "success": true,
+                  "session_id": "E-commerce_Features_Sprint_1",
+                  "message": "New session created successfully"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Agent service not initialized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sessions/switch": {
+      "post": {
+        "tags": ["Sessions"],
+        "summary": "Switch to Existing Session",
+        "description": "Switch the active conversation context to an existing chat session. This loads the conversation history from the specified session and makes it the current active session.\n\nThe current session will be automatically saved before switching if it contains any user messages.",
+        "operationId": "switchSession",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SwitchSessionRequest"
+              },
+              "example": {
+                "session_id": "E-commerce_Features_Sprint_1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully switched to the specified session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                },
+                "example": {
+                  "success": true,
+                  "session_id": "E-commerce_Features_Sprint_1",
+                  "message": "Session switched successfully"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "detail": "Session not found"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Agent service not initialized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sessions/current": {
+      "get": {
+        "tags": ["Sessions"],
+        "summary": "Get Current Session Info",
+        "description": "Retrieve information about the currently active chat session, including session ID, message count, and whether the session contains user messages.",
+        "operationId": "getCurrentSession",
+        "responses": {
+          "200": {
+            "description": "Current session information retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentSessionInfo"
+                },
+                "example": {
+                  "session_id": "E-commerce_Features_Sprint_1",
+                  "message_count": 8,
+                  "has_user_messages": true
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error retrieving session information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Agent service not initialized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/save-chat": {
+      "post": {
+        "tags": ["Sessions"],
+        "summary": "Manually Save Current Chat",
+        "description": "Manually trigger saving the current chat session to Azure Blob Storage. This is useful for ensuring important conversations are persisted.\n\nNote: Chat sessions are automatically saved after each user message and assistant response, so manual saving is typically not required.",
+        "operationId": "saveChatManually",
+        "responses": {
+          "200": {
+            "description": "Chat session saved successfully or no content to save",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaveChatResponse"
+                },
+                "examples": {
+                  "successful_save": {
+                    "summary": "Successful Save",
+                    "description": "Chat session saved successfully",
+                    "value": {
+                      "success": true,
+                      "blob_name": "E-commerce_Features_Sprint_1_20250926_143022.json",
+                      "message": "Session 'E-commerce_Features_Sprint_1' saved successfully"
+                    }
+                  },
+                  "empty_conversation": {
+                    "summary": "Empty Conversation",
+                    "description": "No content to save",
+                    "value": {
+                      "success": true,
+                      "blob_name": null,
+                      "message": "No chat history to save (empty conversation)"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error saving chat session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaveChatResponse"
+                },
+                "example": {
+                  "success": false,
+                  "blob_name": null,
+                  "message": "Failed to save chat: Storage connection failed"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Agent service not initialized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/chat-sessions": {
+      "get": {
+        "tags": ["Sessions"],
+        "summary": "List All Chat Sessions",
+        "description": "Retrieve a list of all saved chat sessions from Azure Blob Storage. Sessions are returned in reverse chronological order (newest first) with metadata including last modified time and session size.",
+        "operationId": "getChatSessions",
+        "responses": {
+          "200": {
+            "description": "List of chat sessions retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatSessionResponse"
+                },
+                "example": {
+                  "sessions": [
+                    {
+                      "blob_name": "E-commerce_Features_Sprint_1_20250926_143022.json",
+                      "session_id": "E-commerce_Features_Sprint_1_20250926_143022",
+                      "last_modified": "2025-09-26T14:30:22.123456Z",
+                      "size": 15420
+                    },
+                    {
+                      "blob_name": "User_Authentication_Stories_20250925_092015.json",
+                      "session_id": "User_Authentication_Stories_20250925_092015",
+                      "last_modified": "2025-09-25T09:20:15.654321Z",
+                      "size": 8937
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error retrieving chat sessions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Agent service not initialized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/chat-sessions/{blob_name}": {
+      "get": {
+        "tags": ["Sessions"],
+        "summary": "Load Specific Chat Session",
+        "description": "Load and retrieve the complete conversation history and metadata for a specific chat session by its blob name.",
+        "operationId": "getChatSession",
+        "parameters": [
+          {
+            "name": "blob_name",
+            "in": "path",
+            "required": true,
+            "description": "The blob name of the chat session to load",
+            "schema": {
+              "type": "string",
+              "example": "E-commerce_Features_Sprint_1_20250926_143022.json"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Chat session loaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatSessionDetail"
+                },
+                "example": {
+                  "session_id": "E-commerce_Features_Sprint_1",
+                  "timestamp": "2025-09-26T14:30:22.123456Z",
+                  "message_count": 8,
+                  "chat_history": [
+                    {
+                      "role": "system",
+                      "content": "You are the Orchestrator AI Assistant...",
+                      "timestamp": null
+                    },
+                    {
+                      "role": "user",
+                      "content": "Create a user story for shopping cart functionality",
+                      "timestamp": "2025-09-26T14:25:15.123456Z"
+                    },
+                    {
+                      "role": "assistant",
+                      "content": "# User Story\n\n**Title:** Shopping Cart Management...",
+                      "timestamp": "2025-09-26T14:25:22.654321Z"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Chat session not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "detail": "Chat session not found"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error loading chat session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Agent service not initialized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Sessions"],
+        "summary": "Delete Chat Session",
+        "description": "Permanently delete a specific chat session from Azure Blob Storage. This action cannot be undone.",
+        "operationId": "deleteChatSession",
+        "parameters": [
+          {
+            "name": "blob_name",
+            "in": "path",
+            "required": true,
+            "description": "The blob name of the chat session to delete",
+            "schema": {
+              "type": "string",
+              "example": "E-commerce_Features_Sprint_1_20250926_143022.json"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Chat session deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "Chat session deleted successfully"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Chat session not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "detail": "Chat session not found"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error deleting chat session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Agent service not initialized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Service Health Check",
+        "description": "Check the health status of the API service and its components. This endpoint provides information about service availability, agent initialization status, and basic system information.",
+        "operationId": "healthCheck",
+        "responses": {
+          "200": {
+            "description": "Service health information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                },
+                "example": {
+                  "status": "healthy",
+                  "agent_initialized": true,
+                  "timestamp": "api_service.log"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ChatRequest": {
+        "type": "object",
+        "required": ["query"],
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Natural language query to process through the AI agent system",
+            "example": "Create a user story for implementing two-factor authentication",
+            "minLength": 1,
+            "maxLength": 10000
+          }
+        },
+        "description": "Request payload for processing a chat query"
+      },
+      "ChatResponse": {
+        "type": "object",
+        "required": ["content", "metadata"],
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "Generated content from the AI agent, formatted in Markdown",
+            "example": "# User Story\n\n**Title:** Two-Factor Authentication\n\nAs a security-conscious user...",
+            "minLength": 1
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/ChatMetadata"
+          }
+        },
+        "description": "Response containing AI-generated content and associated metadata"
+      },
+      "ChatMetadata": {
+        "type": "object",
+        "properties": {
+          "userstory": {
+            "type": "boolean",
+            "description": "True if the response contains a generated user story",
+            "example": true
+          },
+          "testcase": {
+            "type": "boolean",
+            "description": "True if the response contains generated test cases",
+            "example": false
+          },
+          "devtask": {
+            "type": "boolean",
+            "description": "True if the response contains generated development tasks",
+            "example": false
+          },
+          "needs_clarification": {
+            "type": "boolean",
+            "description": "True if the agent needs more information to complete the request",
+            "example": false
+          },
+          "needs_save_confirmation": {
+            "type": "boolean",
+            "description": "True if the content is ready to be saved to Azure Boards but needs user confirmation",
+            "example": true
+          },
+          "content_complete": {
+            "type": "boolean",
+            "description": "True if the generated content is complete and comprehensive",
+            "example": true
+          },
+          "sections_count": {
+            "type": "integer",
+            "description": "Number of sections in the generated content",
+            "example": 5,
+            "minimum": 0
+          },
+          "word_count": {
+            "type": "integer",
+            "description": "Approximate word count of the generated content",
+            "example": 243,
+            "minimum": 0
+          },
+          "azure_boards_ready": {
+            "type": "boolean",
+            "description": "True if the content has been formatted and is ready for Azure Boards",
+            "example": false
+          }
+        },
+        "description": "Metadata about the generated content and processing status"
+      },
+      "NewSessionRequest": {
+        "type": "object",
+        "properties": {
+          "session_name": {
+            "type": "string",
+            "description": "Optional name for the new session. If not provided, a timestamp-based name will be generated",
+            "example": "E-commerce Features Sprint 1",
+            "maxLength": 100
+          }
+        },
+        "description": "Request to create a new chat session"
+      },
+      "SessionResponse": {
+        "type": "object",
+        "required": ["success", "message"],
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the session operation was successful",
+            "example": true
+          },
+          "session_id": {
+            "type": "string",
+            "description": "The ID of the created or switched session",
+            "example": "E-commerce_Features_Sprint_1"
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable message about the operation result",
+            "example": "New session created successfully"
+          }
+        },
+        "description": "Response for session creation and switching operations"
+      },
+      "SwitchSessionRequest": {
+        "type": "object",
+        "required": ["session_id"],
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "description": "ID of the session to switch to",
+            "example": "E-commerce_Features_Sprint_1",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        },
+        "description": "Request to switch to an existing session"
+      },
+      "CurrentSessionInfo": {
+        "type": "object",
+        "required": ["session_id", "message_count", "has_user_messages"],
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "description": "ID of the current active session",
+            "example": "E-commerce_Features_Sprint_1"
+          },
+          "message_count": {
+            "type": "integer",
+            "description": "Total number of messages in the current session",
+            "example": 8,
+            "minimum": 0
+          },
+          "has_user_messages": {
+            "type": "boolean",
+            "description": "Whether the session contains any user messages (excluding system messages)",
+            "example": true
+          }
+        },
+        "description": "Information about the currently active session"
+      },
+      "SaveChatResponse": {
+        "type": "object",
+        "required": ["success", "message"],
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the save operation was successful",
+            "example": true
+          },
+          "blob_name": {
+            "type": "string",
+            "nullable": true,
+            "description": "Name of the blob where the chat was saved, null if no content to save",
+            "example": "E-commerce_Features_Sprint_1_20250926_143022.json"
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable message about the save operation result",
+            "example": "Session 'E-commerce_Features_Sprint_1' saved successfully"
+          }
+        },
+        "description": "Response for manual chat save operations"
+      },
+      "ChatSessionResponse": {
+        "type": "object",
+        "required": ["sessions"],
+        "properties": {
+          "sessions": {
+            "type": "array",
+            "description": "List of available chat sessions",
+            "items": {
+              "$ref": "#/components/schemas/ChatSessionSummary"
+            }
+          }
+        },
+        "description": "Response containing a list of all available chat sessions"
+      },
+      "ChatSessionSummary": {
+        "type": "object",
+        "required": ["blob_name", "session_id"],
+        "properties": {
+          "blob_name": {
+            "type": "string",
+            "description": "Blob storage name for the session",
+            "example": "E-commerce_Features_Sprint_1_20250926_143022.json"
+          },
+          "session_id": {
+            "type": "string",
+            "description": "Human-readable session identifier",
+            "example": "E-commerce_Features_Sprint_1_20250926_143022"
+          },
+          "last_modified": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "ISO 8601 timestamp of when the session was last modified",
+            "example": "2025-09-26T14:30:22.123456Z"
+          },
+          "size": {
+            "type": "integer",
+            "description": "Size of the session file in bytes",
+            "example": 15420,
+            "minimum": 0
+          }
+        },
+        "description": "Summary information about a chat session"
+      },
+      "ChatSessionDetail": {
+        "type": "object",
+        "required": ["session_id", "timestamp", "message_count", "chat_history"],
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "description": "Session identifier",
+            "example": "E-commerce_Features_Sprint_1"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp of when the session was created",
+            "example": "2025-09-26T14:30:22.123456Z"
+          },
+          "message_count": {
+            "type": "integer",
+            "description": "Number of messages in the session",
+            "example": 8,
+            "minimum": 0
+          },
+          "chat_history": {
+            "type": "array",
+            "description": "Complete conversation history",
+            "items": {
+              "$ref": "#/components/schemas/ChatMessage"
+            }
+          }
+        },
+        "description": "Detailed information about a specific chat session"
+      },
+      "ChatMessage": {
+        "type": "object",
+        "required": ["role", "content"],
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": ["system", "user", "assistant"],
+            "description": "Role of the message sender",
+            "example": "user"
+          },
+          "content": {
+            "type": "string",
+            "description": "Content of the message",
+            "example": "Create a user story for shopping cart functionality"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "ISO 8601 timestamp of when the message was created",
+            "example": "2025-09-26T14:25:15.123456Z"
+          }
+        },
+        "description": "Individual message in a chat conversation"
+      },
+      "DeleteResponse": {
+        "type": "object",
+        "required": ["success", "message"],
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the delete operation was successful",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable message about the delete operation result",
+            "example": "Chat session deleted successfully"
+          }
+        },
+        "description": "Response for delete operations"
+      },
+      "HealthResponse": {
+        "type": "object",
+        "required": ["status", "agent_initialized"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["healthy", "unhealthy", "degraded"],
+            "description": "Overall health status of the service",
+            "example": "healthy"
+          },
+          "agent_initialized": {
+            "type": "boolean",
+            "description": "Whether the AI agent service has been properly initialized",
+            "example": true
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "Timestamp or log file information",
+            "example": "api_service.log"
+          }
+        },
+        "description": "Health status information for the API service"
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["detail"],
+        "properties": {
+          "detail": {
+            "type": "string",
+            "description": "Detailed error message describing what went wrong",
+            "example": "Agent service not initialized"
+          }
+        },
+        "description": "Standard error response format"
+      }
+    }
+  },
+  "security": [],
+  "externalDocs": {
+    "description": "Azure Boards AI Agent GitHub Repository",
+    "url": "https://github.com/gurdaan/agentic-workflow-backend"
+  }
+}
